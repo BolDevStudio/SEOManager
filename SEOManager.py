@@ -36,8 +36,8 @@ def generate_report(client_name):
     c = canvas.Canvas(pdf_filename, pagesize=letter)
 
     # Rejestracja czcionki Noto Sans
-    pdfmetrics.registerFont(TTFont('NotoSans', os.path.join(".venv/fonts", "NotoSans-VariableFont_wdth,wght.ttf")))
-    pdfmetrics.registerFont(TTFont('NotoSansBold', os.path.join(".venv/fonts", "NotoSans_Condensed-Bold.ttf")))
+    pdfmetrics.registerFont(TTFont('NotoSans', os.path.join("fonts", "NotoSans-VariableFont_wdth,wght.ttf")))
+    pdfmetrics.registerFont(TTFont('NotoSansBold', os.path.join("fonts", "NotoSans_Condensed-Bold.ttf")))
 
     # Ustawienia czcionki
     c.setFont("NotoSansBold", 24)
