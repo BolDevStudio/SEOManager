@@ -1,11 +1,12 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, ttk
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfbase import pdfmetrics
 from datetime import datetime
 import os
+import matplotlib.pyplot as plt
 
 # Lista klientów
 clients = {}
@@ -125,6 +126,16 @@ def show_changes(client_name):
         changes_text.insert(tk.END, f"Wpływ na SEO: {change['impact']}\n")
         changes_text.insert(tk.END, f"Opis: {change['description']}\n\n")
 
+    # Aktualizacja statystyk
+    update_statistics(client_name)
+
+# Funkcja do aktualizacji statystyk
+def update_statistics(client_name):
+    stats_text.delete(1.0, tk.END)  # Wyczyść poprzedni tekst
+    total_changes = len(clients[client_name])
+    stats_text.insert(tk.END, f"Liczba zmian: {total_changes}\n")
+    # Możesz dodać inne statystyki, jeśli potrzebujesz
+
 # Funkcja do wyświetlania pola tekstowego dla "Inne"
 def update_impact_selection(*args):
     if selected_impact.get() == "Inne":
@@ -137,6 +148,24 @@ def on_client_select(event):
     client_name = client_listbox.get(tk.ACTIVE)
     if client_name:
         show_changes(client_name)  # Zaktualizuj zmiany dla wybranego klienta
+
+# Funkcja do rysowania wykresów
+def draw_chart():
+    if not clients:
+        messagebox.showerror("Błąd", "Brak danych do wyświetlenia wykresu.")
+        return
+
+    # Przygotowanie danych
+    labels = list(clients.keys())
+    values = [len(changes) for changes in clients.values()]
+
+    plt.bar(labels, values)
+    plt.xlabel('Klienci')
+    plt.ylabel('Liczba zmian')
+    plt.title('Zmiany SEO dla klientów')
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.show()
 
 # Tworzenie GUI
 root = tk.Tk()
@@ -157,21 +186,16 @@ client_listbox.bind('<<ListboxSelect>>', on_client_select)  # Dodaj obsługę wy
 tk.Label(root, text="Data zmiany:").grid(row=2, column=0, padx=5, pady=5)
 change_date_entry = tk.Entry(root)
 change_date_entry.grid(row=2, column=1, padx=5, pady=5)
-change_date_entry.insert(0, datetime.now().strftime('%Y-%m-%d'))  # Ustawienie dzisiejszej daty
 
 tk.Label(root, text="Wpływ na SEO:").grid(row=3, column=0, padx=5, pady=5)
 selected_impact = tk.StringVar()
-selected_impact.trace_add('write', update_impact_selection)  # Dodaj śledzenie zmian wyboru
+impact_options = ["Wysoki", "Średni", "Niski", "Inne"]
+for i, option in enumerate(impact_options):
+    tk.Radiobutton(root, text=option, variable=selected_impact, value=option, command=update_impact_selection).grid(row=3+i, column=1, sticky='w')
 
-# Checkboxy dla wpływu na SEO
-tk.Radiobutton(root, text="Niski", variable=selected_impact, value="Niski").grid(row=3, column=1, sticky=tk.W)
-tk.Radiobutton(root, text="Średni", variable=selected_impact, value="Średni").grid(row=4, column=1, sticky=tk.W)
-tk.Radiobutton(root, text="Wysoki", variable=selected_impact, value="Wysoki").grid(row=5, column=1, sticky=tk.W)
-tk.Radiobutton(root, text="Inne", variable=selected_impact, value="Inne").grid(row=6, column=1, sticky=tk.W)
-
-other_impact_entry = tk.Entry(root)
+other_impact_entry = tk.Entry(root)  # Pole dla "Inne"
 other_impact_entry.grid(row=7, column=1, padx=5, pady=5)
-other_impact_entry.grid_remove()  # Ukryj pole tekstowe "Inne"
+other_impact_entry.grid_remove()  # Ukryj początkowo
 
 tk.Label(root, text="Opis:").grid(row=8, column=0, padx=5, pady=5)
 description_entry = tk.Text(root, height=5, width=40)
@@ -180,10 +204,20 @@ description_entry.grid(row=8, column=1, padx=5, pady=5)
 tk.Button(root, text="Dodaj zmianę", command=add_change).grid(row=9, column=1, padx=5, pady=5)
 
 # Wyświetlanie zmian
-tk.Label(root, text="Zmiany:").grid(row=10, column=0, padx=5, pady=5)
+tk.Label(root, text="Zmiany klienta:").grid(row=10, column=0, padx=5, pady=5)
 changes_text = tk.Text(root, height=10, width=50)
 changes_text.grid(row=11, column=0, columnspan=3, padx=5, pady=5)
 
-tk.Button(root, text="Generuj raport", command=lambda: generate_report(client_listbox.get(tk.ACTIVE))).grid(row=12, column=1, padx=5, pady=5)
+# Statystyki
+tk.Label(root, text="Statystyki klienta:").grid(row=12, column=0, padx=5, pady=5)
+stats_text = tk.Text(root, height=5, width=50)
+stats_text.grid(row=13, column=0, columnspan=3, padx=5, pady=5)
 
+# Generowanie raportu
+tk.Button(root, text="Generuj raport", command=lambda: generate_report(client_listbox.get(tk.ACTIVE))).grid(row=14, column=0, padx=5, pady=5)
+
+# Rysowanie wykresu
+tk.Button(root, text="Rysuj wykres", command=draw_chart).grid(row=14, column=1, padx=5, pady=5)
+
+# Uruchomienie aplikacji
 root.mainloop()
